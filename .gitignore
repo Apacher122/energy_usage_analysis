@@ -5,5 +5,7 @@
 *.sql
 *.sqlite
 *.json
+*.db*
+*.pyc
 
-**/__pycache__/
+**/__pycache__/*

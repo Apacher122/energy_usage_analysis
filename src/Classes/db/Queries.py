@@ -1,10 +1,12 @@
-from Classes.db import DataBase
+""" Query the database for good vibes """
 import sqlite3
+from Classes.db import DataBase
 from datetime import datetime
 
 dt_format = "%d/%m/%Y %H:%M:%S"
 
 class UsageQueries:
+    """ This is a tinkerers mess. Gonna fix it up and make it more sensible/practical """
     def __init__(self, **kwargs):
         self._con = sqlite3.connect(kwargs.get('filename'))
         self.table = kwargs.get('table', 'device')
@@ -15,9 +17,14 @@ class UsageQueries:
             print(err)
 
     def insert(self, data):
+        """ insert into db """
         db = self._cur
+        table_name = ""
         try:
-            db.executemany("INSERT INTO {table_name} VALUES (:date_time, :device, :wattage)".format(table_name=self._table), data)
+            db.executemany(
+                f"INSERT INTO {table_name} VALUES (:date_time, :device, :wattage)"
+                    .format(table_name=self._table), data
+            )
             self._con.commit()
         except sqlite3.Error as err:
             print(err)
@@ -31,11 +38,13 @@ class UsageQueries:
     #                    """)
 
     @property
-    def table(self): return self._table
+    def table(self):
+        """ da table """
+        return self._table
 
     @table.setter
     def table(self, table):
-        tn = ""
+        """ Kinda don't like this """
         match table.strip():
             case 'Air conditioner':
                 self._table = 'air_conditioner'
@@ -56,7 +65,3 @@ class UsageQueries:
 
         sql = f"CREATE TABLE IF NOT EXISTS {self._table} (date_time DATETIME, device, wattage)"
         self._con.execute(sql)
-
-
-
-    

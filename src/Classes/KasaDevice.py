@@ -1,17 +1,18 @@
-from Classes.db import Queries as qry
-from datetime import datetime
-from dotenv import load_dotenv
-from modules import calculate_usage as cal
+""" Only for Kasa devices. Tapo will be next """
 import re
 import os
 import json
+from datetime import datetime
+from dotenv import load_dotenv
+from kasa import exceptions
+from Classes.db import Queries as qry
+from modules import calculate_usage as cal
 
-START = "start"
-END = "end"
-dt_format = "%Y-%m-%d %H:%M:%S"
+DT_FORMAT = "%Y-%m-%d %H:%M:%S"
 load_dotenv()
 
-class Device:
+class KasaDevice:
+    """ Class to hold Kasa device info """
     RECORD_START = "start"
     RECORD_END = "end"
 
@@ -19,50 +20,59 @@ class Device:
         self._dev = device
         self.device_name = device_name
         self._db = self.get_device_db()
-        self.status = Device.RECORD_START
+        self.status = KasaDevice.RECORD_START
 
     def get_device_db(self):
+        """ Fetch device info from DB """
+        # TODO: Implement postgresql instead of sqlite3
         return qry.UsageQueries(filename = 'devices.db', table=self._device_name)
-    
+
     async def record_device_at_time(self):
+        """ Get device usage information at specified times """
         file_path = f"{os.getenv('FILEPATH')}{self.device_name}.json"
-        date_of_entry = datetime.now().strftime(dt_format)
+        date_of_entry = datetime.now().strftime(DT_FORMAT)
         try:
             usage = self._dev.modules.get("Energy")
-        except:
-            print("oops")
+        except exceptions.KasaException as e:
+            # TODO: Handle exception
+            print(e)
+
         res = {
             'date_time': date_of_entry,
             'device': self.device_name,
-            'wattage': usage.consumption_today
+            'wattage': usage.consumption_today,
+            'record_type': self.status
         }
 
         if os.path.exists(file_path):
-            with open(file_path, "r") as fp:
+            with open(file_path, "r", encoding='utf-8') as fp:
                 data = json.load(fp)
             data.append(res)
         else:
             data = [res]
-        
-        with open(file_path, "w") as fp:
+
+        with open(file_path, "w", encoding='utf-8') as fp:
             json.dump(data, fp)
 
     def fetch_usage_data(self):
+        """ Get usage data, and calculate total usage """
         file_path = f"{os.getenv('FILEPATH')}{self.device_name}.json"
-        with open(file_path, "r") as fp:
-                data = json.load(fp)
-        
-        if self.status == Device.RECORD_END:
+        with open(file_path, "r", encoding='utf-8') as fp:
+            data = json.load(fp)
+
+        if self.status == KasaDevice.RECORD_END:
             cal.calculate_daily_kwh(data=data)
 
     def clear_json(self):
+        """ Just delete everything man """
         file_path = f"{os.getenv('FILEPATH')}{self.device_name}.json"
-        with open(file_path, "w") as w:
-            data = json.dump([],w)
-
+        with open(file_path, "w", encoding='utf-8') as w:
+            json.dump([],w)
 
     @property
-    def device_name(self): return self._device_name
+    def device_name(self):
+        """ yee """
+        return self._device_name
 
     @device_name.setter
     def device_name(self, device_name):
@@ -73,5 +83,6 @@ class Device:
             new_name = new_name.lower()
 
             self._device_name = new_name
-        except:
+        except AttributeError as err:
+            print(err)
             print("cannot do the name man")
