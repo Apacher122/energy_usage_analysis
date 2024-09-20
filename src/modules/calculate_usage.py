@@ -94,3 +94,12 @@ def calculate_daily_kwh(data):
             start_kwh = 0.0
             end_kwh = 0.0
             start_recorded = False
+            
+def get_running_total(past_data, cur_device):
+    """TODO"""
+    device_stats = past_data['BY DEVICE']
+    for device in device_stats:
+        if cur_device['entity_id'] == device['entity_id']:
+            cur_device['estimated_cost'] += device['total_by_device']
+
+    return cur_device
