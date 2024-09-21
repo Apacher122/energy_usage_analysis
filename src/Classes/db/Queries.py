@@ -1,65 +1,10 @@
 """ Query the database for good vibes """
 import sqlite3
-from Classes.db import DataBase
-from datetime import datetime
-from psycopg2 import sql
 
-dt_format = "%d/%m/%Y %H:%M:%S"
-
-class KasaQueries:
-    """ This is a tinkerers mess. Gonna fix it up and make it more sensible/practical """
-    def __init__(self, **kwargs):
-        self._con = sqlite3.connect(kwargs.get('filename'))
-        self.table = kwargs.get('table', 'device')
-        self._cur = self._con.cursor()
-        try:
-            self._cur.execute("PRAGMA journal_mode=wal")
-        except sqlite3.Error as err:
-            print(err)
-
-    def insert(self, data):
-        """ insert into db """
-        db = self._cur
-        table_name = ""
-        try:
-            db.executemany(
-                f"INSERT INTO {table_name} VALUES (:date_time, :device, :wattage)"
-                    .format(table_name=self._table), data
-            )
-            self._con.commit()
-        except sqlite3.Error as err:
-            print(err)
-
-    @property
-    def table(self):
-        """ da table """
-        return self._table
-
-    @table.setter
-    def table(self, table):
-        """ Kinda don't like this """
-        match table.strip():
-            case 'Air conditioner':
-                self._table = 'air_conditioner'
-            case 'air purifier':
-                self._table = 'air_purifier'
-            case 'Central Plug Top':
-                self._table = 'central_plug_top'
-            case 'Power Strip (peripherals)':
-                self._table = 'power_strip'
-            case 'Monitors':
-                self._table = 'monitors'
-            case 'Personal PC':
-                self._table = 'personal_pc'
-            case "Jupi’s light":
-                self._table = 'jupis_light'
-            case _:
-                self._table = "ERR"
-
-        sql = f"CREATE TABLE IF NOT EXISTS {self._table} (date_time DATETIME, device, wattage)"
-        self._con.execute(sql)
+DT_FORMAT = "%d/%m/%Y %H:%M:%S"
 
 class HAQueries:
+    """ Queries for Home Assistant data """
     def __init__(self, **kwargs):
         self._con = sqlite3.connect(kwargs.get('filename'))
         self.table = kwargs.get('table', 'device')
@@ -85,6 +30,12 @@ class HAQueries:
             print(err)
 
     def fetch_all(self):
+        """ Fetch data from database
+            
+            Returns:
+                dict: data from database
+                bool: returns False if error
+        """
         db = self._cur
         db.row_factory = sqlite3.Row
         try:
@@ -100,6 +51,12 @@ class HAQueries:
             return False
 
     def get_data(self, entity_id):
+        """ Fetch data from database
+            
+            Returns:
+                dict: data from database
+                bool: returns False if error
+        """
         db = self._cur
         try:
             db.execute("""
@@ -114,24 +71,39 @@ class HAQueries:
             return False
 
     def query_usage_data(self):
+        """ Fetch usage data by device, day, and month
+
+            Returns:
+                dict: dictionary of data representations
+                bool: returns False if error
+        """
         db = self._cur
-        qry_by_dev = ("""
+        qry_by_dev = """
                 SELECT entity_id, SUM(estimated_cost) as total_by_device
                 FROM usage_data
                 GROUP BY entity_id
-        """)
+        """
 
-        qry_by_date = ("""
+        qry_by_date = """
                 SELECT record_date, SUM(estimated_cost) as total_by_day
                 FROM usage_data
                 GROUP BY record_date
-        """)
+        """
 
-        qry_by_usage = ("""
+        qry_by_usage = """
                 SELECT entity_id, SUM(total_kwh) as total_by_kwh
                 FROM usage_data
                 GROUP BY entity_id
-        """)
+        """
+
+        qry_by_month = """
+                SELECT 
+                    STRFTIME('%m', record_date) as month,
+                    SUM(total_kwh) as total_by_kwh,
+                    SUM(estimated_cost) as total_by_cost
+                FROM usage_data
+                GROUP BY month
+        """
 
         try:
             db.execute(qry_by_dev)
@@ -151,11 +123,17 @@ class HAQueries:
             column_names = [col[0] for col in desc]
             kwh_res = [dict(zip(column_names, row))
                        for row in db.fetchall()]
+
+            db.execute(qry_by_month)
+            desc = db.description
+            column_names = [col[0] for col in desc]
+            month_res = [dict(zip(column_names, row))
+                       for row in db.fetchall()]
         except sqlite3.Error as err:
             print(err)
             return False
 
-        return {'BY DEVICE': dev_res, 'BY DATE': date_res, 'BY KWH': kwh_res}
+        return {'BY DEVICE': dev_res, 'BY DATE': date_res, 'BY KWH': kwh_res, 'BY MONTH': month_res}
 
     @property
     def table(self):
