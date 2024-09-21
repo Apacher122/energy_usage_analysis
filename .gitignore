@@ -12,4 +12,4 @@ usage
 not_mine.*
 
 
-**/__pycache__/*
+*/__pycache__/*
