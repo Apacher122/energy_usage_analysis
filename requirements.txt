@@ -1,0 +1,5 @@
+APScheduler==3.10.4
+homeassistant_api==4.2.2.post2
+kasa==0.0.3
+python-dotenv==1.0.1
+python_dateutil==2.9.0.post0
