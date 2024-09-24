@@ -1,0 +1,36 @@
+body { background-color: #0A0A0A; }
+
+@font-face {
+    font-family: 'Terminal';
+    src: url('./fonts/Px437_ACM_VGA_8x16.ttf');
+}
+
+h1 {
+    color: #15ff00;
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 2em;
+    font-family: 'Terminal', sans-serif;
+    min-width: 400px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15); 
+}
+
+#table_columns td {
+    color: #15ff00;
+    border-collapse: collapse;
+    font-size: 1.2em;
+    font-family: 'Terminal', sans-serif;
+}
+
+table, td, tr{
+    color: #00ffbf;
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 1em;
+    font-family: 'Terminal', sans-serif;
+    min-width: 200px;
+}
+
+div {
+    color: #00ffbf;
+}

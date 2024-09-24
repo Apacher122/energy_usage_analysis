@@ -11,5 +11,7 @@
 usage
 not_mine.*
 
+**/node_modules/
 
-**/__pycache__/*
+
+**/__pycache__/
