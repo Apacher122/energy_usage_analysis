@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import routes from './routes/routes.js';
 import { socketApi } from './socket/socket_handler.js';
 import express  from 'express';

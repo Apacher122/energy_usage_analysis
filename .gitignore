@@ -10,6 +10,8 @@
 *.csv
 usage
 not_mine.*
+eslint.config.*
+.prettierrc
 
 **/node_modules/
 

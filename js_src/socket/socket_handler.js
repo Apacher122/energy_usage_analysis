@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Server } from 'socket.io';
 import schedule from 'node-schedule'
 import day_changed from '../utils/helpers.js';

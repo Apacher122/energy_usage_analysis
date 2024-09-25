@@ -2,6 +2,8 @@
 <html>
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src= "/public/realtime.js"></script>
     <link rel="stylesheet" href="./realtime.css" type="text/css">
 </head>
 <body>
@@ -25,8 +27,9 @@
         </table>
     </div>
     <div id = "console"></div>
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
+    <!-- <script src="/socket.io/socket.io.js"></script>
+    <script src= "./web_pages/public/realtime.js"></script> -->
+    <!-- <script>
         const socket = io();
         console.log("TEST")
         const today = new Date();
@@ -119,6 +122,6 @@
             }
         });
         
-    </script>
+    </script> -->
 </body>
 </html>

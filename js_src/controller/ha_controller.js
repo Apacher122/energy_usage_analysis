@@ -5,19 +5,16 @@ import path from 'path';
 
 
 let devices = []
-const My_Devices = {
-    devices: devices
-}
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the director
 
-const get_devices = async (req, res) => {
+const get_devices = async (_req, res) => {
     try {
         await ax_inst
             .get('/states')
             .then(function (response) {
-                const data = JSON.stringify(response.data)
+                const data = response.data
                 const substr = '_today_s_consumption'
                 for (const idx in response.data) {
                     if (response.data[idx].entity_id.includes(substr)) {
@@ -27,19 +24,19 @@ const get_devices = async (req, res) => {
                         devices.push(device);
                     }
                 }
-                res.status(201).json({My_Devices})
+                res.status(201).json({data})
             });
     } catch (err) {
         console.log(err)
     }
 }
 
-const get_real_time_today = async (req, res) => {
+const get_real_time_today = async (_req, res) => {
     try {
-        res.sendFile(path.join(__dirname,'../web_pages/realtime.html'))
+        res.sendFile(path.join(__dirname, '../web_pages/realtime.html'))
     } catch (err) {
         console.log(err)
     }
-}
+};
 
-export default { get_devices, get_real_time_today};
+export default { get_devices, get_real_time_today };

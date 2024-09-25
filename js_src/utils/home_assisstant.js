@@ -8,7 +8,6 @@ async function get_devices() {
         await ax_inst
             .get('/states')
             .then(function (response) {
-                const data = JSON.stringify(response.data)
                 const substr = '_today_s_consumption'
                 for (const idx in response.data) {
                     if (response.data[idx].entity_id.includes(substr)) {
@@ -26,14 +25,16 @@ async function get_devices() {
 }
 
 async function get_real_time_today(device, entity_id) {
-    let curr_consumption
+    let curr_consumption;
     try {
         await ax_inst
             .get(`/state/${entity_id}`)
-            .then(function (response)) {
-                curr_consumption = response.state
-                return device.calculate_kwh_today(curr_consumption)
-            }
+            .then(function () {
+                curr_consumption = response.state;
+                return device.calculate_kwh_today(curr_consumption);
+            })
+    } catch (err){
+        console.log(err);
     }
 }
 
