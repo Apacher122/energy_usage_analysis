@@ -7,6 +7,7 @@ dotenv.config({
 
 export const History = class {
     constructor() {
+        this.start_total = 0.0;
         this.kwh_daily = 0.0;
         this.kwh_monthly = 0.0;
         this.kwh_total = 0.0;
@@ -19,8 +20,7 @@ export const History = class {
         let monthly_cost = parseFloat(process.env.COST_PER_KWH);
         if (this.in_billing_window()) {
             this.kwh_daily = daily;
-            this.kwh_total += this.kwh_daily;
-            console.log(this.kwh_total)
+            this.kwh_total = this.start_total + this.kwh_daily;
         }
         this.cost_daily = this.kwh_daily * monthly_cost;
         this.cost_total = this.kwh_total * monthly_cost;

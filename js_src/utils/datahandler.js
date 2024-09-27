@@ -113,7 +113,8 @@ async function get_device_history(device) {
                             }
                             
                             if (!isNaN(start_kwh) && !isNaN(end_kwh)) {
-                                device.history.kwh_total += (end_kwh - start_kwh);
+                                device.history.start_total += 
+                                    (end_kwh - start_kwh);
                             }
                         } catch (err) {
                             console.log(`DEBUG -> ${err}`);
