@@ -9,16 +9,16 @@ async function fetch_all_devices() {
         await ax_inst
             .get('/states')
             .then(async function (response) {
+                const data = response.data;
                 console.log("Getting Historical Data");
-                for (const idx in response.data) {
+                for (const idx in data) {
+                    const info = data[idx];
                     if (
-                        response.data[idx].entity_id.includes('_today_s_consumption') &&
-                        !response.data[idx].entity_id.includes('_cost')
+                        info.entity_id.includes('_today_s_consumption') &&
+                        !info.entity_id.includes('_cost')
                     ) {
-                        let device = new Device(
-                            response.data[idx].entity_id,
-                            response.data[idx].state
-                        );
+                        let device = 
+                            new Device(info.entity_id, info.state);
                         await get_device_history(device);
                         devices.push(device);
                     }
@@ -26,7 +26,7 @@ async function fetch_all_devices() {
                 console.log("Historical Data Loaded");
             });
     } catch (err) {
-        console.log(`DEBUG: ${arguments.callee.name} -> ${err}`)
+        console.log(`DEBUG: ${arguments.callee.name} -> ${err}`);
     }
     console.log("Devices Loaded");
 }
@@ -37,11 +37,12 @@ async function fetch_rt() {
             await ax_inst
                 .get(`/states/${devices[idx].entity_id}`)
                 .then(function (response) {
-                    devices[idx].calculate_kwh_today(parseFloat(response.data.state))
-                    devices[idx].calculate_running_cost()
+                    let current_val = parseFloat(response.data.state);
+                    let start_val = devices[idx].state;
+                    devices[idx].history.set_stats(current_val - start_val)
                 })
         } catch (err) {
-            console.log(`DEBUG: ${arguments.callee.name} -> ${err}`)
+            console.log(`DEBUG: -> ${err}`);
         }
 
         try {
@@ -53,10 +54,11 @@ async function fetch_rt() {
             await ax_inst
                 .get(`/states/${device_wattage}`)
                 .then(function (response) {
-                    devices[idx].current_wattage = parseFloat(response.data.state)
+                    devices[idx].current_wattage =
+                        parseFloat(response.data.state);
                 })
         } catch (err) {
-            console.log(`DEBUG: ${arguments.callee.name} -> ${err}`)
+            console.log(`DEBUG: ${arguments.callee.name} -> ${err}`);
         }
 
         try {
@@ -67,56 +69,59 @@ async function fetch_rt() {
             await ax_inst
                 .get(`/states/${power_status}`)
                 .then(function (response) {
-                    devices[idx].power_status = response.data.state
+                    devices[idx].power_status = response.data.state;
                 })
         } catch (err) {
-            console.log(`DEBUG: ${arguments.callee.name} -> ${err}`)
+            console.log(`DEBUG: ${arguments.callee.name} -> ${err}`);
         }
     }
 }
 
 async function get_device_history(device) {
-    var time_format = "YYYY-MM-DDTHH:mm:ssZ"
-    var past_date = moment("2024-07-01T00:00:00-05:00")
-    var date_today = moment(new Date(), time_format)
-    var total = 0.0
+    const fmt = "YYYY-MM-DDTHH:mm:ssZ";
+    const past = moment("2024-07-01T00:00:00-05:00");
+    const present = moment(new Date(), fmt);
     for (
-        var start = moment(past_date);
-        start.diff(date_today, 'days') <= 0;
+        let start = moment(past);
+        start.diff(present, 'days') <= 0;
         start.add(1, 'days')
     ) {
-        var day_start = moment(start);
-        var day_end = moment(start);
+        let day_start = moment(start);
+        let day_end = moment(start);
         day_start.set({hour:6,minute:0,second:0,millisecond:0});
         day_end.set({hour:19,minute:59,second:0,millisecond:0});
         try {
             await ax_inst
-                .get(`/history/period/${day_start.format(time_format)}`, {
+                .get(`/history/period/${day_start.format(fmt)}`, {
                     params: {
                         filter_entity_id: `${device.entity_id}`,
-                        end_time: `${day_end.format(time_format)}`
+                        end_time: `${day_end.format(fmt)}`
                     }
                 })
                 .then(function (response) {
-                    if (response.data[0] != undefined) {
+                    let data = response.data[0];
+                    if (data != undefined) {
                         try {
-                            let start_kwh = parseFloat(response.data[0][0].state)
-                            let end_kwh = parseFloat(response.data[0][response.data[0].length - 1].state);
-                            if (moment(response.data[0][0].last_changed).isSame(date_today, 'day')) {
-                                device.state = parseFloat(response.data[0][0].state)
+                            let last = (data.length - 1);
+                            let start_kwh = parseFloat(data[0].state);
+                            let end_kwh = parseFloat(data[last].state);
+                            let last_changed = data[0].last_changed;
+                            if (moment(last_changed).isSame(present, 'day') &&
+                                data[0].state != undefined
+                            ) {
+                                device.state = start_kwh;
                             }
                             
                             if (!isNaN(start_kwh) && !isNaN(end_kwh)) {
-                                total += (end_kwh - start_kwh);
+                                device.history.kwh_total += (end_kwh - start_kwh);
                             }
                         } catch (err) {
-                            console.log(`DEBUG -> ${err}`)
+                            console.log(`DEBUG -> ${err}`);
                         }
                     }
-                    device.kwh_total = total
                 });
         } catch (err) {
-            console.log(`DEBUG: ${arguments.callee.name} -> ${err}`)
+            console.log(`DEBUG: -> ${err}`);
         }
     }
 }

@@ -14,13 +14,13 @@ const get_devices = async (_req, res) => {
         await ax_inst
             .get('/states')
             .then(function (response) {
-                const data = response.data
-                const substr = '_today_s_consumption'
-                for (const idx in response.data) {
-                    if (response.data[idx].entity_id.includes(substr)) {
-                        let entity_id = response.data[idx].entity_id
-                        let state = response.data[idx].state
-                        let device = new Device(entity_id, state)
+                const data = response.data;
+                const substr = '_today_s_consumption';
+                for (const idx in data) {
+                    const info = data[idx]
+                    if (info.entity_id.includes(substr)) {
+                        let device = 
+                            new Device(info.entity_id, info.state)
                         devices.push(device);
                     }
                 }
