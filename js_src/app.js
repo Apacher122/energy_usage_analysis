@@ -14,7 +14,7 @@ const app = express();
 const httpServer = createServer(app);
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
-const __dirname = path.dirname(__filename); // get the name of the director
+const __dirname = path.dirname(__filename); // get the name of the directory
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname,'./web_pages/index.html'))
